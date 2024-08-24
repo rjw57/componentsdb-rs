@@ -1,5 +1,6 @@
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
+use fake::{Dummy, Fake, Faker};
 use uuid::Uuid;
 
 #[derive(Queryable, Selectable)]
@@ -13,40 +14,35 @@ pub struct Cabinet {
     pub updated_at: DateTime<Utc>,
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Dummy)]
 #[diesel(table_name = crate::schema::cabinets)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
-pub struct NewCabinet<'a> {
-    pub name: &'a str,
+pub struct NewCabinet {
+    pub name: String,
 }
 
-pub fn create_cabinet(conn: &mut PgConnection, name: &str) -> Cabinet {
-    use crate::schema::cabinets;
+impl Cabinet {
+    pub fn fake(conn: &mut PgConnection) -> QueryResult<Cabinet> {
+        diesel::insert_into(crate::schema::cabinets::table)
+            .values(fake_cabinet())
+            .returning(Cabinet::as_returning())
+            .get_result(conn)
+    }
+}
 
-    let new_cabinet = NewCabinet { name };
-
-    diesel::insert_into(cabinets::table)
-        .values(&new_cabinet)
-        .returning(Cabinet::as_returning())
-        .get_result(conn)
-        .expect("Error saving new cabinet")
+pub fn fake_cabinet() -> NewCabinet {
+    Faker.fake()
 }
 
 #[cfg(test)]
 mod test {
-    use fake::{Fake, Faker};
-
     use super::*;
-    use crate::test::within_test_transaction;
-
-    fn fake_cabinet(conn: &mut PgConnection) -> Cabinet {
-        create_cabinet(conn, &Faker.fake::<String>())
-    }
+    use crate::testing::*;
 
     #[test]
     fn can_create() {
-        within_test_transaction(|conn| {
-            assert_ne!(fake_cabinet(conn).id, 0);
+        with_db(|conn| {
+            assert_ne!(Cabinet::fake(conn).unwrap().id, 0);
         })
     }
 }
