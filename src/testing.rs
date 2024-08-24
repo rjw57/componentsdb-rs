@@ -13,20 +13,27 @@ static TEST_DATABASE_CONTAINER: LazyLock<Container<postgres::Postgres>> = LazyLo
         .unwrap()
 });
 
-pub fn establish_test_database_connection() -> PgConnection {
+pub fn get_db_url() -> String {
     let container = &*TEST_DATABASE_CONTAINER;
     let host_port = container.get_host_port_ipv4(5432).unwrap();
     let host = container.get_host().unwrap();
-    let database_url = format!("postgres://postgres:postgres@{host}:{host_port}/postgres");
-    PgConnection::establish(&database_url).unwrap()
+    format!("postgres://postgres:postgres@{host}:{host_port}/postgres")
+}
+
+pub fn get_db_pool() -> db::DbPool {
+    db::new_pool(&get_db_url()).unwrap()
+}
+
+pub fn get_db_connection() -> db::DbPooledConnection {
+    get_db_pool().get().unwrap()
 }
 
 pub fn with_db<F>(f: F)
 where
     F: FnOnce(&mut PgConnection),
 {
-    establish_test_database_connection().test_transaction::<_, Error, _>(|conn| {
-        migrate_database(conn).unwrap();
+    get_db_connection().test_transaction::<_, Error, _>(|conn| {
+        db::migrate(conn).unwrap();
         f(conn);
         Ok(())
     })

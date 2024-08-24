@@ -4,10 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+base64 = "0.22.1"
 chrono = "0.4.38"
-diesel = { version = "2.2.3", features = ["postgres", "uuid", "chrono"] }
+diesel = { version = "2.2.3", features = ["postgres", "uuid", "chrono", "r2d2"] }
 diesel_migrations = { version = "2.2.0", default-features = false, features = ["postgres"] }
 fake = { version = "2.9.2", features = ["derive"] }
+juniper = { version = "0.16.1", features = ["uuid", "chrono"] }
 uuid = { version = "1.10.0", features = ["v4"] }
 
 [dev-dependencies]

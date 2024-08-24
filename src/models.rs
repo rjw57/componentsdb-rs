@@ -40,7 +40,7 @@ mod test {
     use crate::testing::*;
 
     #[test]
-    fn can_create() {
+    fn can_create_cabinet() {
         with_db(|conn| {
             assert_ne!(Cabinet::fake(conn).unwrap().id, 0);
         })
