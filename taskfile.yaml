@@ -1,0 +1,19 @@
+version: "3"
+
+tasks:
+  down:
+    desc: "stop running containers"
+    cmds:
+      - docker compose --profile=* down --remove-orphans
+  down-hard:
+    desc: "stop running containers and delete local volumes"
+    cmds:
+      - docker compose --profile=* down --volumes --remove-orphans
+  psql:
+    desc: "open a database shell"
+    cmds:
+      - docker compose run --rm psql {{.CLI_ARGS}}
+  diesel:
+    desc: "run diesel CLI tool"
+    cmds:
+      - docker compose run --rm diesel {{.CLI_ARGS}}

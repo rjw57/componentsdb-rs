@@ -3,11 +3,11 @@
 ## Running diesel
 
 ```sh
-docker compose run --rm diesel [...args]
+task diesel -- [...args]
 ```
 
 E.g.:
 
 ```sh
-docker compose run --rm diesel migrations run
+task diesel -- migration run
 ```

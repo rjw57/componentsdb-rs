@@ -60,6 +60,23 @@ services:
       db:
         condition: service_healthy
 
+  # Run the cargo CLI tool with the backend directory mounted as the working directory
+  cargo:
+    profiles:
+      - tool
+    build:
+      target: base
+      context: .
+    entrypoint: ["cargo"]
+    environment:
+      DATABASE_URL: postgres://postgres:postgres-pass@db/components
+    working_dir: /workdir
+    volumes:
+      - ./:/workdir
+    depends_on:
+      db:
+        condition: service_healthy
+
   ########## SUPPORT SERVICES ##########
 
   # Run database migrations

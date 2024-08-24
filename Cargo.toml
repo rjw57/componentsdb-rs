@@ -4,3 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+chrono = "0.4.38"
+diesel = { version = "2.2.3", features = ["postgres", "uuid", "chrono"] }
+diesel_migrations = { version = "2.2.0", default-features = false, features = ["postgres"] }
+uuid = { version = "1.10.0", features = ["v4"] }
+
+[dev-dependencies]
+fake = { version = "2.9.2", features = ["derive"] }
+testcontainers-modules = { version = "0.9.0", features = ["postgres", "blocking"] }
