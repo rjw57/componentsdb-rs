@@ -10,7 +10,7 @@ use uuid::Uuid;
 pub struct Cursor(Uuid);
 
 impl Cursor {
-    fn uuid(self) -> Uuid {
+    pub fn uuid(self) -> Uuid {
         return self.0;
     }
 }
@@ -22,13 +22,11 @@ impl From<Uuid> for Cursor {
 }
 
 impl TryFrom<ID> for Cursor {
-    type Error = &'static str;
+    type Error = anyhow::Error;
 
     fn try_from(value: ID) -> Result<Self, Self::Error> {
-        let bytes = BASE64_URL_SAFE_NO_PAD
-            .decode(value.to_string())
-            .or(Err("Cursor could not be decoded into bytes"))?;
-        let uuid = Uuid::from_slice(bytes.as_slice()).or(Err("Cursor is not a UUID"))?;
+        let bytes = BASE64_URL_SAFE_NO_PAD.decode(value.to_string())?;
+        let uuid = Uuid::from_slice(bytes.as_slice())?;
         Ok(Cursor(uuid))
     }
 }

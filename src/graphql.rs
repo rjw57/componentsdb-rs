@@ -8,9 +8,18 @@ pub use cursor::*;
 
 mod cursor;
 
+fn id_to_uuid(id: ID) -> anyhow::Result<Uuid> {
+    let cursor: Cursor = id.try_into()?;
+    Ok(cursor.uuid())
+}
+
+fn uuid_to_id(uuid: Uuid) -> ID {
+    let cursor: Cursor = uuid.into();
+    cursor.into()
+}
+
 #[derive(GraphQLObject, Queryable, Selectable, Debug)]
 #[diesel(table_name = crate::schema::cabinets)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
 #[graphql(description = "A cabinet which holds multiple drawers of components")]
 pub struct Cabinet {
     #[diesel(column_name = uuid, deserialize_as = Cursor)]
@@ -42,11 +51,10 @@ impl Query {
     fn cabinet(id: ID, context: &Context) -> FieldResult<Cabinet> {
         use super::schema::cabinets::dsl::{cabinets, uuid};
 
-        let cursor: Cursor = id.try_into()?;
-        let cursor_uuid: Uuid = cursor.into();
+        let uuid_ = id_to_uuid(id)?;
         let cabinet = context.with_db_conn(|conn| {
             cabinets
-                .filter(uuid.eq(cursor_uuid))
+                .filter(uuid.eq(uuid_))
                 .select(Cabinet::as_select())
                 .first(conn)
                 .optional()
@@ -81,7 +89,7 @@ mod test {
 
     #[test]
     fn can_create_context() {
-        with_context(|_| {})
+        with_context(|_| { });
     }
 
     #[test]
@@ -100,6 +108,6 @@ mod test {
             let cursor: Cursor = db_cabinet.uuid.into();
             let gql_cabinet = Query::cabinet(cursor.into(), &context).unwrap();
             assert_eq!(gql_cabinet.name, db_cabinet.name);
-        })
+        });
     }
 }

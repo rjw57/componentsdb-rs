@@ -26,6 +26,6 @@ mod test {
 
     #[test]
     fn migrations_can_be_run() {
-        with_db(|_conn| {});
+        with_db_conn(|_conn| {});
     }
 }

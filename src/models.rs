@@ -44,7 +44,7 @@ mod test {
 
     #[test]
     fn can_create_cabinet() {
-        with_db(|conn| {
+        with_db_conn(|conn| {
             assert_ne!(Cabinet::fake(conn).unwrap().id, 0);
         })
     }
