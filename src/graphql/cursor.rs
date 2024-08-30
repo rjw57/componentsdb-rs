@@ -10,14 +10,18 @@ use uuid::Uuid;
 pub struct Cursor(Uuid);
 
 impl Cursor {
-    pub fn uuid(self) -> Uuid {
-        return self.0;
+    pub fn as_uuid(self) -> Uuid {
+        self.into()
+    }
+
+    pub fn as_id(self) -> ID {
+        self.into()
     }
 }
 
 impl From<Uuid> for Cursor {
     fn from(value: Uuid) -> Self {
-        Cursor(value)
+        Self(value)
     }
 }
 
@@ -39,7 +43,7 @@ impl Into<ID> for Cursor {
 
 impl Into<Uuid> for Cursor {
     fn into(self) -> Uuid {
-        self.uuid()
+        self.as_uuid()
     }
 }
 

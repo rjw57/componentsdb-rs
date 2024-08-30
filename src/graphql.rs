@@ -1,47 +1,16 @@
 use diesel::prelude::*;
-use juniper::*;
-use std::sync::{Arc, Mutex};
+use juniper::{graphql_object, EmptyMutation, EmptySubscription, FieldResult, RootNode, ID};
 use uuid::Uuid;
 
-use super::db::*;
+pub use context::*;
 pub use cursor::*;
+pub use schema::*;
 
+mod context;
 mod cursor;
-
-fn id_to_uuid(id: ID) -> anyhow::Result<Uuid> {
-    let cursor: Cursor = id.try_into()?;
-    Ok(cursor.uuid())
-}
-
-fn uuid_to_id(uuid: Uuid) -> ID {
-    let cursor: Cursor = uuid.into();
-    cursor.into()
-}
-
-#[derive(GraphQLObject, Queryable, Selectable, Debug)]
-#[diesel(table_name = crate::schema::cabinets)]
-#[graphql(description = "A cabinet which holds multiple drawers of components")]
-pub struct Cabinet {
-    #[diesel(column_name = uuid, deserialize_as = Cursor)]
-    id: ID,
-    name: String,
-}
-
-pub struct Context {
-    pub db_conn_mutex: Arc<Mutex<DbPooledConnection>>,
-}
-
-impl Context {
-    pub fn with_db_conn<T, F>(&self, f: F) -> T
-    where
-        F: FnOnce(&mut DbPooledConnection) -> T,
-    {
-        let mut conn = self.db_conn_mutex.lock().unwrap();
-        f(&mut *conn)
-    }
-}
-
-impl juniper::Context for Context {}
+mod schema;
+#[cfg(test)]
+mod testing;
 
 pub struct Query;
 
@@ -51,7 +20,7 @@ impl Query {
     fn cabinet(id: ID, context: &Context) -> FieldResult<Cabinet> {
         use super::schema::cabinets::dsl::{cabinets, uuid};
 
-        let uuid_ = id_to_uuid(id)?;
+        let uuid_: Uuid = (*id).try_into()?;
         context
             .with_db_conn(|conn| {
                 cabinets
@@ -65,27 +34,35 @@ impl Query {
 
 pub type Schema = RootNode<'static, Query, EmptyMutation<Context>, EmptySubscription<Context>>;
 
+pub fn new_schema() -> Schema {
+    Schema::new(Query, EmptyMutation::new(), EmptySubscription::new())
+}
+
 #[cfg(test)]
 mod test {
-    use super::*;
-    use crate::models;
-    use crate::testing::*;
+    use juniper::{graphql_value, graphql_vars, Value};
 
-    fn with_context<F>(f: F)
-    where
-        F: FnOnce(&Context),
-    {
-        let mut conn = get_db_connection();
-        conn.begin_test_transaction().ok();
-        migrate(&mut conn).ok();
-        let db_conn_mutex = Arc::new(Mutex::new(conn));
-        let context = Context { db_conn_mutex };
-        f(&context)
-    }
+    use crate::models;
+
+    use super::testing::*;
+    use super::*;
 
     #[test]
     fn can_create_context() {
         with_context(|_| {});
+    }
+
+    fn query_cabinet(id: &str, context: &Context) -> Value {
+        let (res, errors) = execute_sync(
+            "query($id: ID!) { cabinet(id: $id) { name } }",
+            &graphql_vars! {
+                "id": (id),
+            },
+            context,
+        )
+        .unwrap();
+        assert_eq!(errors.len(), 0);
+        res
     }
 
     #[test]
@@ -101,9 +78,16 @@ mod test {
     fn can_query_cabinet() {
         with_context(|context| {
             let db_cabinet = context.with_db_conn(|conn| models::Cabinet::fake(conn).unwrap());
-            let cursor: Cursor = db_cabinet.uuid.into();
-            let gql_cabinet = Query::cabinet(cursor.into(), &context).unwrap();
-            assert_eq!(gql_cabinet.name, db_cabinet.name);
+            let id: String = db_cabinet.uuid.into();
+            let res = query_cabinet(&id, context);
+            assert_eq!(
+                res,
+                graphql_value!({
+                    "cabinet": {
+                        "name": db_cabinet.name,
+                    }
+                })
+            )
         });
     }
 }
