@@ -43,7 +43,7 @@ impl Context {
 
 impl juniper::Context for Context {}
 
-struct Query;
+pub struct Query;
 
 #[graphql_object]
 #[graphql(context = Context)]
@@ -63,7 +63,7 @@ impl Query {
     }
 }
 
-// type Schema = RootNode<'static, Query, EmptyMutation<Context>, EmptySubscription<Context>>;
+pub type Schema = RootNode<'static, Query, EmptyMutation<Context>, EmptySubscription<Context>>;
 
 #[cfg(test)]
 mod test {
