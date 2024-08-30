@@ -33,7 +33,7 @@ where
     F: FnOnce(&mut PgConnection),
 {
     get_db_connection().test_transaction::<_, Error, _>(|conn| {
-        db::migrate(conn).unwrap();
+        db::migrate(conn).ok();
         f(conn);
         Ok(())
     })

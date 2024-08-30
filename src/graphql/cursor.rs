@@ -9,6 +9,18 @@ use uuid::Uuid;
 #[derive(PartialEq, FromSqlRow)]
 pub struct Cursor(Uuid);
 
+impl Cursor {
+    fn uuid(self) -> Uuid {
+        return self.0;
+    }
+}
+
+impl From<Uuid> for Cursor {
+    fn from(value: Uuid) -> Self {
+        Cursor(value)
+    }
+}
+
 impl TryFrom<ID> for Cursor {
     type Error = &'static str;
 
@@ -29,7 +41,7 @@ impl Into<ID> for Cursor {
 
 impl Into<Uuid> for Cursor {
     fn into(self) -> Uuid {
-        self.0
+        self.uuid()
     }
 }
 

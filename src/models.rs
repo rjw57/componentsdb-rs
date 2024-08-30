@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use diesel::prelude::*;
+use diesel::{connection::LoadConnection, pg::Pg, prelude::*};
 use fake::{Dummy, Fake, Faker};
 use uuid::Uuid;
 
@@ -22,7 +22,10 @@ pub struct NewCabinet {
 }
 
 impl Cabinet {
-    pub fn fake(conn: &mut PgConnection) -> QueryResult<Cabinet> {
+    pub fn fake<Conn>(conn: &mut Conn) -> QueryResult<Cabinet>
+    where
+        Conn: Connection<Backend = Pg> + LoadConnection,
+    {
         diesel::insert_into(crate::schema::cabinets::table)
             .values(fake_cabinet())
             .returning(Cabinet::as_returning())
