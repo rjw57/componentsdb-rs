@@ -52,18 +52,14 @@ impl Query {
         use super::schema::cabinets::dsl::{cabinets, uuid};
 
         let uuid_ = id_to_uuid(id)?;
-        let cabinet = context.with_db_conn(|conn| {
-            cabinets
-                .filter(uuid.eq(uuid_))
-                .select(Cabinet::as_select())
-                .first(conn)
-                .optional()
-        })?;
-
-        match cabinet {
-            Some(cabinet) => Ok(cabinet),
-            None => Err("No cabinet found".into()),
-        }
+        context
+            .with_db_conn(|conn| {
+                cabinets
+                    .filter(uuid.eq(uuid_))
+                    .select(Cabinet::as_select())
+                    .first(conn)
+            })
+            .or(Err("No such cabinet".into()))
     }
 }
 
