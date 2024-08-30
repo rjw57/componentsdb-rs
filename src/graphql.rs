@@ -89,7 +89,7 @@ mod test {
 
     #[test]
     fn can_create_context() {
-        with_context(|_| { });
+        with_context(|_| {});
     }
 
     #[test]

@@ -1,5 +1,7 @@
 use diesel::{
-    migration::{self, MigrationVersion}, r2d2::{ConnectionManager, Pool, PoolError, PooledConnection}, PgConnection
+    migration::{self, MigrationVersion},
+    r2d2::{ConnectionManager, Pool, PoolError, PooledConnection},
+    PgConnection,
 };
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 
@@ -14,8 +16,6 @@ pub fn new_pool(database_url: &str) -> Result<DbPool, PoolError> {
 }
 
 /// Run database migrations.
-pub fn migrate(
-    connection: &mut PgConnection,
-) -> migration::Result<Vec<MigrationVersion<'_>>> {
+pub fn migrate(connection: &mut PgConnection) -> migration::Result<Vec<MigrationVersion<'_>>> {
     connection.run_pending_migrations(MIGRATIONS)
 }
