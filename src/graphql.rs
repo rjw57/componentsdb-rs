@@ -23,7 +23,7 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn with_db_conn<F, T>(&self, f: F) -> T
+    pub fn with_db_conn<T, F>(&self, f: F) -> T
     where
         F: FnOnce(&mut DbPooledConnection) -> T,
     {
